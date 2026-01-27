@@ -1,6 +1,6 @@
 # This is a sketchy way of setting up a simple mc server via ansible as a docker container
 
-- This way it should be easy to set up
+- This way it should be easy to set up (just run set_up_server.yml on your inventory)
 - It lets you upload a existing world as a zip
 - to download the world as a zip
 - easy whitelist players via cmd on the server -> use whitelist add/remove PLAYERNAME
