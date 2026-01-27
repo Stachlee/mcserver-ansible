@@ -85,7 +85,18 @@
   ansible.builtin.copy:
     content: |
       #!/bin/bash
-      # ... (Skriptinhalt bleibt gleich)
+      # Whitelist Helper Skript
+      if [ $# -lt 1 ]; then
+          echo "Benutzung: whitelist [add|remove|list|on|off] [NAME]"
+          exit 1
+      fi
+      ACTION=$1
+      NAME=$2
+      if [ "$ACTION" == "list" ] || [ "$ACTION" == "on" ] || [ "$ACTION" == "off" ]; then
+          sudo docker exec mc_server rcon-cli whitelist $ACTION
+      else
+          sudo docker exec mc_server rcon-cli whitelist $ACTION $NAME
+      fi
     dest: /usr/local/bin/whitelist
     mode: '0755'
 
