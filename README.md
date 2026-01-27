@@ -3,7 +3,7 @@
 - This way it should be easy to set up
 - It lets you upload a existing world
 - to download the world (but not fast)
-- easy whitelist players vie cmd on the server -> use whitelist add/remove PLAYERNAME
+- easy whitelist players via cmd on the server -> use whitelist add/remove PLAYERNAME
 
 ## you need to create a create a vault and adjust the fields for:
 
