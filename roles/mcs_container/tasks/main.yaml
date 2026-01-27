@@ -1,0 +1,119 @@
+---
+- name: Cache aktualisieren und Basispakete installieren
+  ansible.builtin.apt:
+    update_cache: yes
+    name: 
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - software-properties-common
+    state: present
+
+# 1. SERVER STOPPEN & SPERREN
+- name: Minecraft Container vorübergehend stoppen (Wartungsmodus)
+  community.docker.docker_compose_v2:
+    project_src: "{{ mc_root_dir }}"
+    state: absent
+  ignore_errors: yes
+
+- name: Port 25565 während der Wartung sperren
+  community.general.ufw:
+    rule: deny
+    port: '25565'
+    proto: tcp
+
+# 2. STRUKTUR UND PRÜFUNGEN
+- name: Erstelle Basis-Ordner Struktur
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: "1000"
+    group: "1000"
+  loop:
+    - "{{ mc_root_dir }}"
+    - "{{ mc_data_dir }}"
+    - "{{ mc_root_dir }}/backups"
+    - "{{ mc_data_dir }}/plugins"
+
+- name: Prüfe ob lokales Welt-Archiv auf dem Laptop existiert
+  delegate_to: localhost
+  become: no
+  ansible.builtin.stat:
+    path: "{{ local_world_archive }}"
+  register: local_world_stat
+  when: local_world_archive is defined and local_world_archive | length > 0
+
+# NEU: Prüfen, ob auf dem Server bereits eine Welt existiert
+- name: Prüfe ob Welt bereits auf dem Server existiert
+  ansible.builtin.stat:
+    path: "{{ mc_data_dir }}/level.dat"
+  register: server_world_stat
+
+# 3. WELT-MIGRATION (Mit Flag-Logik)
+- name: Welt-Migration (Upload und Entpacken)
+  ansible.builtin.unarchive:
+    src: "{{ local_world_archive }}"
+    dest: "{{ mc_data_dir }}/"
+    owner: "1000"
+    group: "1000"
+    remote_src: no
+  when: 
+    - local_world_archive is defined 
+    - local_world_stat.stat.exists | default(false)
+    - (not server_world_stat.stat.exists) or (mc_overwrite_world | default(false))
+  register: migration_result
+  # Erklärung der Logik:
+  # Er führt den Task aus, wenn:
+  # - Die lokale Datei da ist UND
+  # - (Entweder auf dem Server noch keine Welt existiert ODER du das Flag auf 'true' gesetzt hast)
+
+- name: Info-Meldung zum Welt-Status
+  ansible.builtin.debug:
+    msg: "Welt wurde NICHT überschrieben, da bereits eine Welt existiert und mc_overwrite_world auf false steht."
+  when: migration_result.skipped is defined and migration_result.skipped
+
+# 4. KONFIGURATION UND START
+- name: docker-compose.yml erstellen
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ mc_root_dir }}/docker-compose.yml"
+    mode: '0600'
+
+- name: Installiere Whitelist-Bash-Skript
+  ansible.builtin.copy:
+    content: |
+      #!/bin/bash
+      # ... (Skriptinhalt bleibt gleich)
+    dest: /usr/local/bin/whitelist
+    mode: '0755'
+
+- name: Port 25565 in UFW wieder freigeben
+  community.general.ufw:
+    rule: allow
+    port: '25565'
+    proto: tcp
+
+- name: Minecraft Container starten
+  community.docker.docker_compose_v2:
+    project_src: "{{ mc_root_dir }}"
+    state: present
+
+# 5. BACKUPS
+- name: Erstelle ein tägliches Backup-Cronjob
+  ansible.builtin.cron:
+    name: "Minecraft Welt-Backup"
+    minute: "0"
+    hour: "4"
+    user: root
+    # Dieser Befehl packt den mc_data_dir Ordner in ein Archiv mit Datum im Namen
+    job: "tar -cvzf {{ mc_root_dir }}/backups/backup-$(date +%Y%m%d).tar.gz {{ mc_data_dir }}"
+
+- name: Alte Backups automatisch löschen (älter als 14 Tage)
+  ansible.builtin.cron:
+    name: "Minecraft Backup Aufräumen"
+    minute: "30"
+    hour: "4"
+    user: root
+    job: "find {{ mc_root_dir }}/backups/ -type f -mtime +14 -delete"

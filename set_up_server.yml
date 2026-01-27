@@ -1,0 +1,36 @@
+---
+- name: Setup Minecraft Server mit Welt-Migration
+  hosts: otc_mc_server
+  become: yes
+
+  # HIER DIE DATEIEN EXPLIZIT ANGEBEN
+  vars_files:
+    - group_vars/all.yml
+    - group_vars/all/passwords.yml
+
+  # Diese Variablen steuern die geerlingguy.docker Rolle
+  vars:
+    #root passwort aus vault um become aus zu führen
+    ansible_become_password: "{{ vault_sudo_password }}"
+
+    # Docker vars
+    docker_install_compose: true
+    docker_users:
+      - "{{ ansible_user }}"
+    # Installiert das Python-SDK, damit Ansible Docker steuern kann
+    docker_pip_install_packages:
+      - name: docker
+      - name: docker-compose
+
+  # 1. ZUERST: Aufräumen, um den "Failed to start" Fehler zu verhindern
+  pre_tasks:
+    - name: Entferne altes containerd Paket (Konfliktvermeidung)
+      ansible.builtin.apt:
+        name: containerd
+        state: absent
+      when: ansible_os_family == "Debian"
+
+  # 2. DANN: Rollen ausführen
+  roles:
+    - geerlingguy.docker
+    - mcs_container
