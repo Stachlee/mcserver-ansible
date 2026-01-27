@@ -5,6 +5,13 @@
 - to download the world as a zip
 - easy whitelist players via cmd on the server -> use whitelist add/remove PLAYERNAME
 
+## If all below is done you should be able to use the folowing cmds
+
+mcserver-terminal -> creates ssh connection 
+    whitelist add/remove Playername -> to whitelist players (can be executed on the maschine type -terminal before)
+mcserver-update -> essentialy plays the set_up_server.yml again -> can be used to update th mineraft version or to update world
+mcserver-download -> downloads the current minecraft map on the specified location as a zip
+
 ## you need to create a create a vault and adjust the fields for:
 
 - vault_sudo_root 
