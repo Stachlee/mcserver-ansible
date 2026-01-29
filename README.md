@@ -1,9 +1,16 @@
 # This is a sketchy way of setting up a simple mc server via ansible as a docker container
 
-- This way it should be easy to set up
-- It lets you upload a existing world
-- to download the world (but not fast)
-- easy whitelist players vie cmd on the server ()
+- This way it should be easy to set up (just run set_up_server.yml on your inventory)
+- It lets you upload a existing world as a zip
+- to download the world as a zip
+- easy whitelist players via cmd on the server -> use whitelist add/remove PLAYERNAME
+
+## If all below is done you should be able to use the folowing cmds
+
+mcserver-terminal -> creates ssh connection 
+    whitelist add/remove Playername -> to whitelist players (can be executed on the maschine type -terminal before)
+mcserver-update -> essentialy plays the set_up_server.yml again -> can be used to update th mineraft version or to update world
+mcserver-download -> downloads the current minecraft map on the specified location as a zip
 
 ## you need to create a create a vault and adjust the fields for:
 
