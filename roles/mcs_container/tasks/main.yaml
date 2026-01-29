@@ -121,10 +121,12 @@
     # Dieser Befehl packt den mc_data_dir Ordner in ein Archiv mit Datum im Namen
     job: "tar -cvzf {{ mc_root_dir }}/backups/backup-$(date +%Y%m%d).tar.gz {{ mc_data_dir }}"
 
-- name: Alte Backups automatisch löschen (älter als 14 Tage)
+- name: Alte Backups automatisch löschen (älter als 3 Tage)
   ansible.builtin.cron:
     name: "Minecraft Backup Aufräumen"
     minute: "30"
     hour: "4"
     user: root
-    job: "find {{ mc_root_dir }}/backups/ -type f -mtime +14 -delete"
+    # Geändert auf +3 (behält die letzten 3-4 Backups)
+    # Zusätzlicher Check: -name "*.tar.gz" damit nichts falsches gelöscht wird
+    job: "find {{ mc_root_dir }}/backups/ -type f -name '*.tar.gz' -mtime +3 -delete"
