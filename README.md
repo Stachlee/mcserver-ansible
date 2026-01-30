@@ -20,7 +20,7 @@ mcserver-download -> downloads the current minecraft map on the specified locati
 
 ## Besides that i created some simple bash aliases to easily do stuff on the server:
 
-### To download the world:
+### Script to download the world:
 <pre>
 '''bash
     # Hier ist ein cmd zum download der Minecraft server welt
