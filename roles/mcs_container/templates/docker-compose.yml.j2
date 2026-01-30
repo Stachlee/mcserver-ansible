@@ -32,16 +32,3 @@ services:
     volumes:
       - "{{ mc_data_dir }}:/data"
     restart: unless-stopped
-
-  backup:
-    image: itzg/mc-backup
-    container_name: mc_backup
-    environment:
-      RCON_HOST: mc
-      RCON_PASSWORD: "{{ mc_rcon_password }}"
-      BACKUP_INTERVAL: "0 3 * * *"
-      PRUNE_BACKUPS_DAYS: 7
-    volumes:
-      - "{{ mc_data_dir }}:/data:ro"
-      - "{{ mc_root_dir }}/backups:/backups"
-    restart: unless-stopped

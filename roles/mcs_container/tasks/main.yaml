@@ -61,8 +61,8 @@
     remote_src: no
   when: 
     - local_world_archive is defined 
-    - local_world_stat.stat.exists | default(false)
-    - (not server_world_stat.stat.exists) or (mc_overwrite_world | default(false))
+    #- local_world_stat.stat.exists | default(false) #auskommentieren, wenn Welt nur bei nichtvorhandensein updated
+    - mc_overwrite_world | default(false)
   register: migration_result
   # Erklärung der Logik:
   # Er führt den Task aus, wenn:
@@ -111,22 +111,42 @@
     project_src: "{{ mc_root_dir }}"
     state: present
 
-# 5. BACKUPS
-- name: Erstelle ein tägliches Backup-Cronjob
+# 5. BACKUPS (robust: use scripts so cron lines contain no percent signs)
+- name: Installiere das Backup-Skript
+  ansible.builtin.copy:
+    dest: /usr/local/bin/mc_backup.sh
+    owner: root
+    group: root
+    mode: '0755'
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+      mkdir -p "{{ mc_root_dir }}/backups"
+      /bin/tar -czf "{{ mc_root_dir }}/backups/backup-$(date +%Y%m%d).tar.gz" "{{ mc_data_dir }}" >> /var/log/mc_backup.log 2>&1
+
+- name: Erstelle Cronjob tägliches Backup um 04:00
   ansible.builtin.cron:
     name: "Minecraft Welt-Backup"
     minute: "0"
     hour: "4"
     user: root
-    # WICHTIG: Die %-Zeichen müssen für Cron mit einem Backslash (\) maskiert werden!
-    job: "/bin/tar -czf {{ mc_root_dir }}/backups/backup-$(date +\\%Y\\%m\\%d).tar.gz {{ mc_data_dir }} >> /var/log/mc_backup.log 2>&1"
+    job: "/usr/local/bin/mc_backup.sh"
 
-- name: Alte Backups automatisch löschen (älter als 3 Tage)
+- name: Installiere das Cleanup-Skript für alte Backups
+  ansible.builtin.copy:
+    dest: /usr/local/bin/mc_backup_cleanup.sh
+    owner: root
+    group: root
+    mode: '0755'
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+      /usr/bin/find "{{ mc_root_dir }}/backups/" -type f -name '*.tar.gz' -mtime +2 -delete >> /var/log/mc_backup_cleanup.log 2>&1
+
+- name: Erstelle Cronjob Backup-Aufräumen um 04:30
   ansible.builtin.cron:
     name: "Minecraft Backup Aufräumen"
     minute: "30"
     hour: "4"
     user: root
-    # Korrektur: Absoluter Pfad für 'find' und Logging hinzugefügt, um Fehler zu sehen.
-    # Hinweis: -mtime +2 löscht alles, was älter als 72 Stunden (3 Tage) ist. +3 wären 96 Stunden.
-    job: "/usr/bin/find {{ mc_root_dir }}/backups/ -type f -name '*.tar.gz' -mtime +2 -delete >> /var/log/mc_backup_cleanup.log 2>&1"
+    job: "/usr/local/bin/mc_backup_cleanup.sh"
