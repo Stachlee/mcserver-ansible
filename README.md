@@ -18,7 +18,7 @@ mcserver-download -> downloads the current minecraft map on the specified locati
 - server_IP 
 - mc_rcon_password
 
-## Besides that i created some simple bash aliases to easily do stuff on the server:
+##  Besides that i created some simple bash aliases to easily do stuff on the server:
 
 ### Script to download the world:
 <pre>
