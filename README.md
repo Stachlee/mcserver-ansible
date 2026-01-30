@@ -23,7 +23,7 @@ mcserver-download -> downloads the current minecraft map on the specified locati
 ### To download the world:
 <pre>
 '''bash
-    # Hier ist ein cmd zum backup der Minecraft server welt
+    # Hier ist ein cmd zum download der Minecraft server welt
     mcserver-download() {
         # --- KONFIGURATION ---
         local SERVER_IP="YOUR_SERVER_IP"
