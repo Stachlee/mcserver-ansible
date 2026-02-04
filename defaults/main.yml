@@ -1,6 +1,6 @@
 ---
 # Pfade
-mc_root_dir: "/opt/minecraft"
+mc_root_dir: "/opt/minecraft/"
 mc_data_dir: "{{ mc_root_dir }}/data"
 
 local_world_archive: "" # Hier ggf ein Weltverzeichnis eingeben. Ansonsten wird eine erstellt vom Server
@@ -8,7 +8,7 @@ mc_overwrite_world: false  # Standardmäßig wird NICHT überschrieben
 
 #Paswords
 # In group_vars/all/vars.yml (unverschlüsselt)
-mc_rcon_password: "{{ vault_mc_rcon_password }}"
+mc_rcon_password: ""
 
 # Hardware-Einstellungen (Passe mc_ram_max an deinen Server an)
 mc_ram_max: "6G"            # Wie viel RAM darf Minecraft nutzen?
