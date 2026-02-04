@@ -1,8 +1,21 @@
 ---
+
+# 1. ZUERST: Aufräumen, um den "Failed to start" Fehler zu verhindern
+- name: Entferne altes containerd Paket (Konfliktvermeidung)
+  ansible.builtin.apt:
+    name: containerd
+    state: absent
+  when: ansible_os_family == "Debian"
+
+# 2. DANN: Rollen ausführen
+- name: Rollen ausführen
+  include_role:
+    name: geerlingguy.docker
+
 - name: Cache aktualisieren und Basispakete installieren
   ansible.builtin.apt:
     update_cache: yes
-    name: 
+    name:
       - apt-transport-https
       - ca-certificates
       - curl
@@ -12,10 +25,11 @@
 
 # 1. SERVER STOPPEN & SPERREN
 - name: Minecraft Container vorübergehend stoppen (Wartungsmodus)
-  community.docker.docker_compose_v2:
-    project_src: "{{ mc_root_dir }}"
-    state: absent
-  ignore_errors: yes
+  block:
+    - community.docker.docker_compose_v2:
+        project_src: "{{ mc_root_dir }}"
+        state: absent
+  ignore_errors: true
 
 - name: Port 25565 während der Wartung sperren
   community.general.ufw:
@@ -39,7 +53,7 @@
 
 - name: Prüfe ob lokales Welt-Archiv auf dem Laptop existiert
   delegate_to: localhost
-  become: no
+  become: false
   ansible.builtin.stat:
     path: "{{ local_world_archive }}"
   register: local_world_stat
@@ -59,15 +73,10 @@
     owner: "1000"
     group: "1000"
     remote_src: no
-  when: 
-    - local_world_archive is defined 
-    #- local_world_stat.stat.exists | default(false) #auskommentieren, wenn Welt nur bei nichtvorhandensein updated
+  when:
+    - local_world_archive is defined
     - mc_overwrite_world | default(false)
   register: migration_result
-  # Erklärung der Logik:
-  # Er führt den Task aus, wenn:
-  # - Die lokale Datei da ist UND
-  # - (Entweder auf dem Server noch keine Welt existiert ODER du das Flag auf 'true' gesetzt hast)
 
 - name: Info-Meldung zum Welt-Status
   ansible.builtin.debug:

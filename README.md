@@ -1,69 +1,53 @@
-# This is a sketchy way of setting up a simple mc server via ansible as a docker container
+# Minecraft Server Ansible Role
 
-- This way it should be easy to set up (just run set_up_server.yml on your inventory)
-- It lets you upload a existing world as a zip
-- to download the world as a zip
-- easy whitelist players via cmd on the server -> use whitelist add/remove PLAYERNAME
+This Ansible role sets up and manages a Minecraft server using Docker. It handles the installation of necessary packages, configuration of the server, and management of backups.
 
-## If all below is done you should be able to use the folowing cmds
+## Requirements
 
-mcserver-terminal -> creates ssh connection 
-    whitelist add/remove Playername -> to whitelist players (can be executed on the maschine type -terminal before)
-mcserver-update -> essentialy plays the set_up_server.yml again -> can be used to update th mineraft version or to update world
-mcserver-download -> downloads the current minecraft map on the specified location as a zip
+- Ansible 2.9 or higher
+- Docker and Docker Compose installed on the target machine
+- Access to the server with appropriate permissions
 
-## you need to create a create a vault and adjust the fields for:
+## Role Variables
 
-- vault_sudo_root 
-- server_IP 
-- mc_rcon_password
+The following variables can be set in `defaults/main.yml` or overridden in your playbook:
 
-##  Besides that i created some simple bash aliases to easily do stuff on the server:
+- `mc_root_dir`: The root directory for Minecraft files (default: `/opt/minecraft`)
+- `mc_data_dir`: The directory where Minecraft data is stored (default: `{{ mc_root_dir }}/data`)
+- `local_world_archive`: Path to a local world archive for upload (default: `""`)
+- `mc_overwrite_world`: Whether to overwrite the existing world (default: `false`)
+- `mc_rcon_password`: RCON password for server management
+- `mc_ram_max`: Maximum RAM allocated to Minecraft (default: `6G`)
+- `mc_ram_init`: Initial RAM allocated to Minecraft (default: `2G`)
+- `mc_server_type`: Type of Minecraft server (default: `PAPER`)
+- `mc_world_name`: Name of the Minecraft world (default: `world`)
+- `mc_version`: Minecraft version to use (default: `LATEST`)
+- `mc_difficulty`: Difficulty level of the game (default: `normal`)
+- `mc_motd`: Message of the Day for the server (default: `Willkommen auf dem Server`)
+- `mc_view_distance`: View distance setting (default: `16`)
+- `mc_whitelist_enabled`: Enable whitelist (default: `TRUE`)
+- `mc_online_mode`: Enable online mode (default: `TRUE`)
 
-### Script to download the world:
-<pre>
-'''bash
-    # Hier ist ein cmd zum download der Minecraft server welt
-    mcserver-download() {
-        # --- KONFIGURATION ---
-        local SERVER_IP="YOUR_SERVER_IP"
-        local USER="" <---- HIER DEN USER DER DAS AUSFÜHRT AUF DEM SERVER
-        local KEY_PATH=""  # <--- PFAD ZU DEINEM KEY ANPASSEN
-        local REMOTE_DIR="/opt/minecraft/data"
-        local BACKUP_BASE="" # <--- PFAD ZU DEINER BACKUP LOCATION
-        local TIMESTAMP=$(date +%Y%m%d_%H%M)
-        local ZIP_NAME="world_$TIMESTAMP.zip"
+## Dependencies
 
-        # Lokalen Ordner erstellen
-        mkdir -p "$BACKUP_BASE"
+This role depends on the following roles:
+- `geerlingguy.docker`: Role for managing Docker installation and configuration.
 
-        echo ">>> 1. Speichervorgänge pausieren (RCON)..."
-        ssh -i "$KEY_PATH" $USER@$SERVER_IP "sudo docker exec mc_server rcon-cli save-off && sudo docker exec mc_server rcon-cli save-all"
+## Example Playbook
 
-        echo ">>> 2. Welt auf dem Server zippen (bitte warten)..."
-        # Wir zippen den Inhalt von /data direkt nach /tmp
-        ssh -i "$KEY_PATH" $USER@$SERVER_IP "cd $REMOTE_DIR && sudo zip -r /tmp/$ZIP_NAME ."
+```yaml
+- hosts: servers
+  become: true
+  roles:
+    - role: your_username.minecraft
+      mc_overwrite_world: true
+      local_world_archive: "/path/to/your/world.zip"
+```
 
-        echo ">>> 3. Speichervorgänge wieder aktivieren..."
-        ssh -i "$KEY_PATH" $USER@$SERVER_IP "sudo docker exec mc_server rcon-cli save-on"
+## License
 
-        echo ">>> 4. Download der ZIP-Datei..."
-        scp -i "$KEY_PATH" $USER@$SERVER_IP:/tmp/$ZIP_NAME "$BACKUP_BASE/"
+BSD-3-Clause
 
-        echo ">>> 5. Aufräumen (temporäre ZIP auf Server löschen)..."
-        ssh -i "$KEY_PATH" $USER@$SERVER_IP "sudo rm /tmp/$ZIP_NAME"
+## Author Information
 
-        echo "---------------------------------------------------------------"
-        echo "FERTIG! Welt als ZIP gesichert: $BACKUP_BASE/$ZIP_NAME"
-    }
-</pre>
-
-### To quickly get in the terminal of the server
-<pre>
-alias mcserver-terminal="ssh YOURUSER@SERVER_IP -i HIER_PFAD_KEY"
-</pre>
-
-### To update the server
-<pre>
-alias mcserver-update="cd Nextcloud/Privat/Code/minecraft-ansible;ansible-playbook set_up_server.yml --ask-vault-pass"
-</pre>
+This role was created in 2026 by Juan.
