@@ -21,10 +21,16 @@ services:
       MOTD: "{{ mc_motd }}"
       VIEW_DISTANCE: "{{ mc_view_distance }}"
       ONLINE_MODE: "{{ mc_online_mode }}"
+      {% if mc_seed is defined and mc_seed | length > 0 %}
+      SEED: "{{ mc_seed }}"
+      {% endif %}
       
       # Whitelist
       ENABLE_WHITELIST: "{{ mc_whitelist_enabled }}"
       ENFORCE_WHITELIST: "{{ mc_enforce_whitelist }}"
+      {% if mc_whitelist_players is defined and mc_whitelist_players | length > 0 %}
+      WHITELIST_USERS: "{{ mc_whitelist_players | join(',') }}"
+      {% endif %}
       
       # RCON (Passwort kommt aus Vault)
       ENABLE_RCON: "true"

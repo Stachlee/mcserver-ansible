@@ -21,11 +21,13 @@ mc_version: "LATEST"
 mc_difficulty: "normal"     # peaceful, easy, normal, hard
 mc_motd: "Willkommen auf dem Server"
 mc_view_distance: 16
+mc_seed: ""                 # Leer lassen für zufälligen Seed
 
 # Sicherheit & Whitelist
 mc_whitelist_enabled: "TRUE"
 mc_enforce_whitelist: "TRUE"
 mc_online_mode: "TRUE"      # FALSE für Cracked-Accounts
+mc_whitelist_players: []     # Liste der Spieler (z.B. ["Steve", "Alex"])
 
 
 # Docker vars
