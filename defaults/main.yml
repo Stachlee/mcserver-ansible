@@ -1,6 +1,6 @@
 ---
 # Pfade
-mc_root_dir: "/opt/minecraft"
+mc_root_dir: "/opt/minecraft/"
 mc_data_dir: "{{ mc_root_dir }}/data"
 
 local_world_archive: "" # Hier ggf ein Weltverzeichnis eingeben. Ansonsten wird eine erstellt vom Server
@@ -8,7 +8,7 @@ mc_overwrite_world: false  # Standardmäßig wird NICHT überschrieben
 
 #Paswords
 # In group_vars/all/vars.yml (unverschlüsselt)
-mc_rcon_password: "{{ vault_mc_rcon_password }}"
+mc_rcon_password: ""
 
 # Hardware-Einstellungen (Passe mc_ram_max an deinen Server an)
 mc_ram_max: "6G"            # Wie viel RAM darf Minecraft nutzen?
@@ -21,8 +21,21 @@ mc_version: "LATEST"
 mc_difficulty: "normal"     # peaceful, easy, normal, hard
 mc_motd: "Willkommen auf dem Server"
 mc_view_distance: 16
+mc_seed: ""                 # Leer lassen für zufälligen Seed
 
 # Sicherheit & Whitelist
 mc_whitelist_enabled: "TRUE"
 mc_enforce_whitelist: "TRUE"
 mc_online_mode: "TRUE"      # FALSE für Cracked-Accounts
+mc_whitelist_players: []     # Liste der Spieler (z.B. ["Steve", "Alex"])
+
+
+# Docker vars
+docker_install_compose: true
+docker_users:
+  - "{{ ansible_user | default('ubuntu') }}"
+# Installiert das Python-SDK, damit Ansible Docker steuern kann
+docker_pip_install_packages:
+  - name: docker
+  - name: docker-compose
+
