@@ -50,4 +50,4 @@ BSD-3-Clause
 
 ## Author Information
 
-This role was created in 2026 by Juan.
+This role was created in 2026 by Juan and Mattis.
