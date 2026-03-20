@@ -21,12 +21,29 @@ The following variables can be set in `defaults/main.yml` or overridden in your 
 - `mc_ram_init`: Initial RAM allocated to Minecraft (default: `2G`)
 - `mc_server_type`: Type of Minecraft server (default: `PAPER`)
 - `mc_world_name`: Name of the Minecraft world (default: `world`)
-- `mc_version`: Minecraft version to use (default: `LATEST`)
+- `mc_version`: Minecraft version to use (default: `LATEST`, also: `SNAPSHOT` or `x.xx.x`)
 - `mc_difficulty`: Difficulty level of the game (default: `normal`)
 - `mc_motd`: Message of the Day for the server (default: `Willkommen auf dem Server`)
 - `mc_view_distance`: View distance setting (default: `16`)
 - `mc_whitelist_enabled`: Enable whitelist (default: `TRUE`)
+- `mc_enforce_whitelist`: Kick non-whitelisted players when whitelist is enabled (default: `TRUE`)
+- `mc_whitelist_players`: List of player names to add to the whitelist (default: `[]`), e.g. `["Steve", "Alex"]`
 - `mc_online_mode`: Enable online mode (default: `TRUE`)
+
+### Whitelist players
+
+Use `mc_whitelist_players` to define which player names are allowed to join.
+When `mc_whitelist_enabled: "TRUE"` and `mc_enforce_whitelist: "TRUE"`, only these players can connect.
+
+Example:
+
+```yaml
+mc_whitelist_enabled: "TRUE"
+mc_enforce_whitelist: "TRUE"
+mc_whitelist_players:
+  - Steve
+  - Alex
+```
 
 ## Dependencies
 
@@ -50,4 +67,4 @@ BSD-3-Clause
 
 ## Author Information
 
-This role was created in 2026 by Juan.
+This role was created in 2026 by Mattis.

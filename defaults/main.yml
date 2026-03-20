@@ -29,6 +29,8 @@ mc_enforce_whitelist: "TRUE"
 mc_online_mode: "TRUE"      # FALSE für Cracked-Accounts
 mc_whitelist_players: []     # Liste der Spieler (z.B. ["Steve", "Alex"])
 
+#Plugins
+mc_plugins_url: [] #Url list aller Plugins
 
 # Docker vars
 docker_install_compose: true
