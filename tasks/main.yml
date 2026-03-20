@@ -23,14 +23,14 @@
       - software-properties-common
     state: present
 
-# 1. SERVER STOPPEN & SPERREN
 - name: Minecraft Container vorübergehend stoppen (Wartungsmodus)
-  block:
-    - community.docker.docker_compose_v2:
-        project_src: "{{ mc_root_dir }}"
-        state: absent
+  community.docker.docker_compose_v2:
+    project_src: "{{ mc_root_dir }}"
+    state: absent
   ignore_errors: true
-  failed_when: mc_root_dir is not defined or mc_root_dir == "" | length == 0
+  when:
+    - mc_root_dir is defined
+    - mc_root_dir | length > 0
 
 - name: Port 25565 während der Wartung sperren
   community.general.ufw:
