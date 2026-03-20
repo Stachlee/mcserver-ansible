@@ -29,6 +29,7 @@ The following variables can be set in `defaults/main.yml` or overridden in your 
 - `mc_enforce_whitelist`: Kick non-whitelisted players when whitelist is enabled (default: `TRUE`)
 - `mc_whitelist_players`: List of player names to add to the whitelist (default: `[]`), e.g. `["Steve", "Alex"]`
 - `mc_online_mode`: Enable online mode (default: `TRUE`)
+- `mc_plugins_url`: List of direct plugin `.jar` URLs to install into `/data/plugins` (default: `[]`)
 
 ### Whitelist players
 
@@ -45,6 +46,26 @@ mc_whitelist_players:
   - Alex
 ```
 
+### Plugins
+
+Plugins are managed via `mc_plugins_url` and synchronized on every role run.
+
+- Add a URL to `mc_plugins_url`: the plugin `.jar` is downloaded to `/data/plugins`.
+- Remove a URL from `mc_plugins_url`: the corresponding `.jar` is removed from `/data/plugins`.
+- Re-running the role applies only the delta (new/removed plugins) and keeps world data in `{{ mc_data_dir }}`.
+
+Use a plugin-capable server type such as `PAPER` (recommended), `SPIGOT`, or `PURPUR`.
+`VANILLA` does not support Bukkit/Paper plugins.
+
+Example:
+
+```yaml
+mc_server_type: "PAPER"
+mc_plugins_url:
+  - "https://example.org/plugins/LuckPerms-Bukkit-5.4.158.jar"
+  - "https://example.org/plugins/Vault.jar"
+```
+
 ## Dependencies
 
 This role depends on the following roles:
@@ -57,8 +78,27 @@ This role depends on the following roles:
   become: true
   roles:
     - role: your_username.minecraft
-      mc_overwrite_world: true
-      local_world_archive: "/path/to/your/world.zip"
+      mc_server_type: "PAPER"
+      mc_version: "1.21.5"
+      mc_ram_max: "6G"
+      mc_ram_init: "2G"
+      mc_rcon_password: "CHANGE_ME"
+
+      # Keep existing world/data unless you explicitly migrate a world archive
+      mc_overwrite_world: false
+      local_world_archive: ""
+
+      # Whitelist
+      mc_whitelist_enabled: "TRUE"
+      mc_enforce_whitelist: "TRUE"
+      mc_whitelist_players:
+        - Steve
+        - Alex
+
+      # Plugins (direct .jar URLs)
+      mc_plugins_url:
+        - "https://example.org/plugins/LuckPerms-Bukkit-5.4.158.jar"
+        - "https://example.org/plugins/Vault.jar"
 ```
 
 ## License

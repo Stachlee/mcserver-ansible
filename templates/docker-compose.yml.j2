@@ -35,10 +35,6 @@ services:
       # RCON (Passwort kommt aus Vault)
       ENABLE_RCON: "true"
       RCON_PASSWORD: "{{ mc_rcon_password }}"
-        {% if mc_plugins_url is defined and mc_plugins_url | length > 0 %}
-        PLUGINS: |
-        "{{ mc_plugins_url | join('\n') }}"
-        {% endif %}
     volumes:
       - "{{ mc_data_dir }}:/data"
     restart: unless-stopped
