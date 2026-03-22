@@ -25,11 +25,22 @@ The following variables can be set in `defaults/main.yml` or overridden in your 
 - `mc_difficulty`: Difficulty level of the game (default: `normal`)
 - `mc_motd`: Message of the Day for the server (default: `Willkommen auf dem Server`)
 - `mc_view_distance`: View distance setting (default: `16`)
+- `mc_seed`: World seed to generate a deterministic world (default: `""` = random seed)
 - `mc_whitelist_enabled`: Enable whitelist (default: `TRUE`)
 - `mc_enforce_whitelist`: Kick non-whitelisted players when whitelist is enabled (default: `TRUE`)
 - `mc_whitelist_players`: List of player names to add to the whitelist (default: `[]`), e.g. `["Steve", "Alex"]`
 - `mc_online_mode`: Enable online mode (default: `TRUE`)
 - `mc_plugins_url`: List of direct plugin `.jar` URLs to install into `/data/plugins` (default: `[]`)
+
+### World seed
+
+Set `mc_seed` if you want a reproducible world generation. Leave it empty (`""`) to let Minecraft generate a random seed.
+
+Example:
+
+```yaml
+mc_seed: "123456789"
+```
 
 ### Whitelist players
 
