@@ -153,6 +153,52 @@
     project_src: "{{ mc_root_dir }}"
     state: present
 
+- name: Effektive Whitelist-Spieler berechnen
+  ansible.builtin.set_fact:
+    mc_effective_whitelist_players: "{{ mc_whitelist_players | default(c_whitelist_players | default([])) }}"
+
+- name: Warten bis RCON erreichbar ist
+  ansible.builtin.command:
+    argv:
+      - docker
+      - exec
+      - mc_server
+      - rcon-cli
+      - list
+  register: mc_rcon_ready
+  changed_when: false
+  retries: 24
+  delay: 5
+  until: mc_rcon_ready.rc == 0
+  when: (mc_whitelist_enabled | string | upper) == "TRUE"
+
+- name: Whitelist im Server aktivieren
+  ansible.builtin.command:
+    argv:
+      - docker
+      - exec
+      - mc_server
+      - rcon-cli
+      - whitelist
+      - "on"
+  changed_when: false
+  when: (mc_whitelist_enabled | string | upper) == "TRUE"
+
+- name: Whitelist-Spieler im Server eintragen
+  ansible.builtin.command:
+    argv:
+      - docker
+      - exec
+      - mc_server
+      - rcon-cli
+      - whitelist
+      - add
+      - "{{ item }}"
+  loop: "{{ mc_effective_whitelist_players }}"
+  when:
+    - (mc_whitelist_enabled | string | upper) == "TRUE"
+    - mc_effective_whitelist_players | length > 0
+
 # 5. BACKUPS (robust: use scripts so cron lines contain no percent signs)
 - name: Installiere das Backup-Skript
   ansible.builtin.copy:
