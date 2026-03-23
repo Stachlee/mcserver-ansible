@@ -29,8 +29,9 @@ services:
       ENABLE_WHITELIST: "{{ mc_whitelist_enabled }}"
       ENFORCE_WHITELIST: "{{ mc_enforce_whitelist }}"
       OVERRIDE_WHITELIST: "TRUE"
-      {% if mc_whitelist_players is defined and mc_whitelist_players | length > 0 %}
-      WHITELIST: "{{ mc_whitelist_players | join(',') }}"
+      {% set effective_whitelist_players = mc_whitelist_players | default(c_whitelist_players | default([])) %}
+      {% if effective_whitelist_players | length > 0 %}
+      WHITELIST: "{{ effective_whitelist_players | join(',') }}"
       {% endif %}
       
       # RCON (Passwort kommt aus Vault)
