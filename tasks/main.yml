@@ -125,7 +125,27 @@
 
 - name: Effektive Whitelist-Spieler berechnen
   ansible.builtin.set_fact:
-    mc_effective_whitelist_players: "{{ mc_whitelist_players if (mc_whitelist_players | default([]) | length > 0) else (c_whitelist_players | default([])) }}"
+    mc_effective_whitelist_players: >-
+      {%- set out = [] -%}
+      {%- for candidate in [
+            mc_whitelist_players | default([]),
+            c_whitelist_players | default([]),
+            whitelist_players | default([])
+          ] -%}
+      {%-   if candidate is string -%}
+      {%-     for p in (candidate.split(',') | map('trim') | reject('equalto', '') | list) -%}
+      {%-       set _ = out.append(p) -%}
+      {%-     endfor -%}
+      {%-   elif candidate is sequence -%}
+      {%-     for p in candidate -%}
+      {%-       set pnorm = p | string | trim -%}
+      {%-       if pnorm | length > 0 -%}
+      {%-         set _ = out.append(pnorm) -%}
+      {%-       endif -%}
+      {%-     endfor -%}
+      {%-   endif -%}
+      {%- endfor -%}
+      {{ out | unique | list }}
 
 - name: Mojang UUIDs fuer Whitelist-Spieler aufloesen
   ansible.builtin.uri:
