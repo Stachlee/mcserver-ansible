@@ -123,6 +123,59 @@
   loop: "{{ mc_existing_plugin_jars.files | map(attribute='path') | list }}"
   when: item not in mc_expected_plugin_paths
 
+- name: Effektive Whitelist-Spieler berechnen
+  ansible.builtin.set_fact:
+    mc_effective_whitelist_players: "{{ mc_whitelist_players | default(c_whitelist_players | default([])) }}"
+
+- name: Mojang UUIDs fuer Whitelist-Spieler aufloesen
+  ansible.builtin.uri:
+    url: "https://api.mojang.com/users/profiles/minecraft/{{ item }}"
+    method: GET
+    return_content: true
+    status_code:
+      - 200
+      - 204
+  loop: "{{ mc_effective_whitelist_players }}"
+  register: mc_whitelist_lookup
+  delegate_to: localhost
+  become: false
+  when:
+    - (mc_whitelist_enabled | string | upper) == "TRUE"
+    - mc_effective_whitelist_players | length > 0
+
+- name: Nicht aufloesbare Whitelist-Spieler sammeln
+  ansible.builtin.set_fact:
+    mc_unresolved_whitelist_players: "{{ (mc_whitelist_lookup.results | rejectattr('status', 'equalto', 200) | map(attribute='item') | list) | default([]) }}"
+  when:
+    - (mc_whitelist_enabled | string | upper) == "TRUE"
+    - mc_effective_whitelist_players | length > 0
+
+- name: Sicherstellen dass alle Whitelist-Spieler existieren
+  ansible.builtin.assert:
+    that:
+      - mc_unresolved_whitelist_players | length == 0
+    fail_msg: "Diese Spieler konnten nicht bei Mojang aufgeloest werden: {{ mc_unresolved_whitelist_players | join(', ') }}"
+  when:
+    - (mc_whitelist_enabled | string | upper) == "TRUE"
+    - mc_effective_whitelist_players | length > 0
+
+- name: Whitelist-Eintraege aufbauen
+  ansible.builtin.set_fact:
+    mc_whitelist_entries: "{{ (mc_whitelist_entries | default([])) + [ {'uuid': (item.json.id | regex_replace('^(.{8})(.{4})(.{4})(.{4})(.{12})$', '\\1-\\2-\\3-\\4-\\5')), 'name': item.item} ] }}"
+  loop: "{{ mc_whitelist_lookup.results | default([]) }}"
+  when:
+    - (mc_whitelist_enabled | string | upper) == "TRUE"
+    - item.status == 200
+
+- name: Whitelist-Datei aus Inventory erstellen
+  ansible.builtin.copy:
+    dest: "{{ mc_data_dir }}/whitelist.json"
+    content: "{{ (mc_whitelist_entries | default([])) | to_nice_json }}"
+    owner: "1000"
+    group: "1000"
+    mode: '0644'
+  when: (mc_whitelist_enabled | string | upper) == "TRUE"
+
 - name: Installiere Whitelist-Bash-Skript
   ansible.builtin.copy:
     content: |
@@ -152,52 +205,6 @@
   community.docker.docker_compose_v2:
     project_src: "{{ mc_root_dir }}"
     state: present
-
-- name: Effektive Whitelist-Spieler berechnen
-  ansible.builtin.set_fact:
-    mc_effective_whitelist_players: "{{ mc_whitelist_players | default(c_whitelist_players | default([])) }}"
-
-- name: Warten bis RCON erreichbar ist
-  ansible.builtin.command:
-    argv:
-      - docker
-      - exec
-      - mc_server
-      - rcon-cli
-      - list
-  register: mc_rcon_ready
-  changed_when: false
-  retries: 24
-  delay: 5
-  until: mc_rcon_ready.rc == 0
-  when: (mc_whitelist_enabled | string | upper) == "TRUE"
-
-- name: Whitelist im Server aktivieren
-  ansible.builtin.command:
-    argv:
-      - docker
-      - exec
-      - mc_server
-      - rcon-cli
-      - whitelist
-      - "on"
-  changed_when: false
-  when: (mc_whitelist_enabled | string | upper) == "TRUE"
-
-- name: Whitelist-Spieler im Server eintragen
-  ansible.builtin.command:
-    argv:
-      - docker
-      - exec
-      - mc_server
-      - rcon-cli
-      - whitelist
-      - add
-      - "{{ item }}"
-  loop: "{{ mc_effective_whitelist_players }}"
-  when:
-    - (mc_whitelist_enabled | string | upper) == "TRUE"
-    - mc_effective_whitelist_players | length > 0
 
 # 5. BACKUPS (robust: use scripts so cron lines contain no percent signs)
 - name: Installiere das Backup-Skript
